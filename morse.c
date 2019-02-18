@@ -292,7 +292,7 @@ static void morse_console(bool value) {
 }
 
 int main() {
-    morse("Hello CQ DE Morse", true);
+    morse("Hello World", true);
     morse_cb = morse_console;
     while (1) {
         morse_update(10);
