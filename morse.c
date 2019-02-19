@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
 
@@ -25,7 +26,7 @@ static uint8_t *morse_live_buf = morse_buf1;
 static uint8_t *morse_next_buf = morse_buf2;
 static bool morse_repeat = false;
 static bool morse_repeat_next = false;
-static uint32_t morse_dot_duration = 60;  // ms  ~= 10wpm
+static uint32_t morse_dot_duration = 120;  // ms  ~= 10wpm
 static uint32_t morse_elapsed_time = 0;  // time since message start.
 
 static char *letters[] = {
@@ -140,8 +141,6 @@ void morse_update(uint32_t elapsed_ms) {
 
 /**
  * \brief Stop currently playing string after the current iteration.
- * 
- * Also clears the next string if one is set.
  */
 void morse_stop(void) {
     morse_repeat = false;
@@ -185,7 +184,7 @@ static bool morse_encode(uint8_t *buf, const char *s, const uint32_t size) {
         i += char_len;
     }
     // Add padding to message end to help separate messages.
-    for (uint8_t j = 0; j < 3; ++j) {
+    for (uint8_t j = 0; j < 4; ++j) {
         uint32_t char_len = morse_encode_char(buf, ' ', i, bit_size);
         if (!char_len) return false;
         i += char_len;
@@ -291,8 +290,23 @@ static void morse_console(bool value) {
     fflush(stdout);
 }
 
-int main() {
-    morse("Hello World", true);
+int main(int argc, char **argv) {
+    // Set message.
+    if (argc > 1) {
+        morse(argv[1], true);
+    } else {
+        morse("Hello World", true);
+    }
+    
+    // Set dot duration.
+    if (argc > 2) {
+        int dot_duration = atoi(argv[2]);
+        if (dot_duration <= 10) {
+            fprintf(stderr, "Invalid dot duration: %s", argv[2]);
+        }
+        morse_dot_duration = dot_duration;
+    }
+    
     morse_cb = morse_console;
     while (1) {
         morse_update(10);
